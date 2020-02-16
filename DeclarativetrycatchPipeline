@@ -1,0 +1,98 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContinuousDownload')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/Chandradha/Maven.git'
+                    }
+                    catch(Exception e1)
+                    {
+                        mail bcc: '', body: 'Jenkins says unable to download the files from Github', cc: '', from: '', replyTo: '', subject: 'Git Download Failed', to: 'chandu.srt@gmail.com'
+                        exit()
+                    }
+                }
+            }
+        }
+         stage('ContinuousBuild')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh label: '', script: 'mvn package'
+                    }
+                    catch(Exception e2)
+                    {
+                        mail bcc: '', body: 'Unable to Build the code', cc: '', from: '', replyTo: '', subject: 'Build Failed', to: 'developer@gmail.com'
+                        exit()
+                    }
+                }
+            }
+        }
+         stage('ContinuousDeployment')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh label: '', script: 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.29.37:/var/lib/tomcat8/webapps/testwebapp1.war'
+                    }
+                    catch(Exception e3)
+                    {
+                        mail bcc: '', body: 'Jenkins is unable to Deploy into tomcat', cc: '', from: '', replyTo: '', subject: 'Deployment Failed', to: 'middleware@gmail.com'
+                        exit()
+                    }
+                }
+            }
+        }
+        stage('ContinuousTesting')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/Chandradha/FunctionalTesting.git'
+                        sh label: '', script: 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline/testing.jar'
+                    }
+                    catch(Exception e4)
+                    {
+                        mail bcc: '', body: 'Functional testing using selenium has failed', cc: '', from: '', replyTo: '', subject: 'Testing Failed', to: 'testing@gmail.com'
+                        exit()
+                    }
+                }
+            }
+        }
+        stage('ContinuousDelivery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh label: '', script: 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.19.79:/var/lib/tomcat8/webapps/Prodwebapp1.war'
+                    }
+                    catch(Exception e5)
+                    {
+                        mail bcc: '', body: 'Jenkins failed to deploy into the Production Servers', cc: '', from: '', replyTo: '', subject: 'Delivery Failed', to: 'delivery_team@gmail.com'
+                        exit()
+                    }
+                }
+            }
+        }
+    }    
+}
