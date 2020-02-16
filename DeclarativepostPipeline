@@ -1,0 +1,48 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('ContinuousDownload')
+        {
+            steps
+            {
+                git 'https://github.com/Chandradha/Maven.git'
+            }
+        }
+         stage('ContinuousBuild')
+        {
+            steps
+            {
+                sh label: '', script: 'mvn package'
+            }
+        }
+         stage('ContinuousDeployment')
+        {
+            steps
+            {
+                sh label: '', script: 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.29.37:/var/lib/tomcat8/webapps/testwebapp1.war'
+            }
+        }
+        stage('ContinuousTesting')
+        {
+            steps
+            {
+                git 'https://github.com/Chandradha/FunctionalTesting.git'
+                sh label: '', script: 'java -jar /home/ubuntu/.jenkins/workspace/DeclarativePipeline/testing.jar'
+            }
+        }
+    }    
+    post
+    {
+        success
+        {
+            sh label: '', script: 'scp /home/ubuntu/.jenkins/workspace/DeclarativePipeline/webapp/target/webapp.war ubuntu@172.31.19.79:/var/lib/tomcat8/webapps/Prodwebapp1.war'
+        }
+        failure
+        {
+            mail bcc: '', body: 'CI-CD is Failed', cc: '', from: '', replyTo: '', subject: 'Status of CI-CD Execution', to: 'chandu.srt@gmail.com'
+        }
+    }
+
+}
